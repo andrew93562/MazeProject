@@ -58,3 +58,13 @@ class Door(Mapsite):
         else: print('    ** This door needs to be opened before you can pass through it...')
 
 class Maze():
+    def __init__(self)"
+        # dictionary to hold room_number, room_obj <key, value> pairs
+        self.rooms = {}
+    
+    def AddRoom(self, room):
+        # use roomNumber as a lookup value to retrieve room object
+        self._rooms[room._roomNumber] = room
+        
+    def RoomNo(self, room_number):
+        return self._rooms[room_number]
