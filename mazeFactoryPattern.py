@@ -71,27 +71,49 @@ class Maze():
     def RoomNo(self, room_number):
         return self._rooms[room_number]
     
+class MazeFactory():
     
+#    creating this class as a factory allows us to create different kinds of mazes
+#    by overwriting the methods. in this way, the code from here on need not change
+#    much, only the above classes (room, door, etc) basically introduces a 
+#    plug-and-play nature to the mapSite objects
+    
+    @classmethod
+    def MakeMaze(cls):
+        return Maze()
+    
+    @classmethod
+    def MakeWall(cls):
+        return Wall()
+    
+    @classmethod
+    def MakeRoom(cls, n):
+        return Room(n)
+
+    @classmethod
+    def MakeDoor(cls, r1, r2):
+        return Door(r1, r2)
     
 class MazeGame():
     
-    def CreateMaze(self):
-        aMaze = Maze()
-        r1 = Room(1)
-        r2 = Room(2)
-        theDoor = Door(r1, r2)
+    # Abstract Factory
+    def CreateMaze(self, factory = MazeFactory):
+        aMaze = factory.MakeMaze()
+        r1 = factory.MakeRoom(1)
+        r2 = factory.MakeRoom(2)
+        theDoor = factory.MakeDoor(r1, r2)
         
         aMaze.AddRoom(r1)
         aMaze.AddRoom(r2)
         
-        r1.SetSide(Direction.North.value, Wall())
+        r1.SetSide(Direction.North.value, factory.MakeWall())
         r1.SetSide(Direction.East.value, theDoor)
-        r1.SetSide(Direction.South.value, Wall())
-        r1.SetSide(Direction.West.value, Wall())
+        r1.SetSide(Direction.South.value, factory.MakeWall())
+        r1.SetSide(Direction.West.value, factory.MakeWall())
 
-        r2.SetSide(Direction(0).value, Wall())
-        r2.SetSide(Direction(1).value, Wall())
-        r2.SetSide(Direction(2).value, Wall())
+        r2.SetSide(Direction(0).value, factory.MakeWall())
+        r2.SetSide(Direction(1).value, factory.MakeWall())
+        r2.SetSide(Direction(2).value, factory.MakeWall())
         r2.SetSide(Direction(3).value, theDoor)
         
         return aMaze
@@ -100,43 +122,50 @@ if __name__ == '__main__':
     #map_site_inst = Mapsite()
     #map_site_inst.Enter()
     
+    #common code from _WithoutPatterns has been moved into a function, which we 
+    #call at the end
+    
+    def find_maze_rooms(maze_obj):
+        maze_rooms = []
+        for room_number in range(5):
+            try:
+                #get teh room number
+                room = maze_obj.RoomNo(room_number)
+                print('\n***Maze has room: {}'.format(room_number, room))
+                print('    Entering the room....')
+                room.Enter()
+                #append rooms to list
+                maze_rooms.append(room)
+                for idx in range(4):
+                    side = room.GetSide(idx)
+                    side_str = str(side.__class__).replace("<class '__main__.", "").replace("'>", "")
+                    print('    Room: {}, {:<15s}, Type: {}'.format(room_number, Direction(idx), side_str))
+                    print('    Trying to enter: ', Direction(idx))
+                    side.Enter()
+                    if 'Door' in side_str:
+                        door = side
+                        if not door._isOpen:
+                            print('    *** Opening the door...')
+                            door._isOpen = True
+                            door.Enter()
+                        print('\t', door)
+                        #get the room on the other side of the door
+                        other_room = door.OtherSideFrom(room)
+                        print('\tOn the other side of the door is Room: {}\n'.format(other_room._roomNumber))
+            except KeyError:
+                print('No room:', room_number)        
+        num_of_rooms = len(maze_rooms)
+        print('\nThere are {} rooms in the Maze.'.format(num_of_rooms))
+            
+        print('Both doors are the same object and they are on the East and West side of the two rooms.')        
+
     print('*' * 21)
     print('*** The Maze Game ***')
     print('*' * 21)
     
-    #create the Maze
-    maze_obj = MazeGame().CreateMaze()
-    
-    #find its rooms
-    maze_rooms = []
-    for room_number in range(5):
-        try:
-            #get teh room number
-            room = maze_obj.RoomNo(room_number)
-            print('\n***Maze has room: {}'.format(room_number, room))
-            print('    Entering the room....')
-            room.Enter()
-            #append rooms to list
-            maze_rooms.append(room)
-            for idx in range(4):
-                side = room.GetSide(idx)
-                side_str = str(side.__class__).replace("<class '__main__.", "").replace("'>", "")
-                print('    Room: {}, {:<15s}, Type: {}'.format(room_number, Direction(idx), side_str))
-                print('    Trying to enter: ', Direction(idx))
-                side.Enter()
-                if 'Door' in side_str:
-                    door = side
-                    if not door._isOpen:
-                        print('    *** Opening the door...')
-                        door._isOpen = True
-                        door.Enter()
-                    print('\t', door)
-                    #get the room on the other side of the door
-                    other_room = door.OtherSideFrom(room)
-                    print('\tOn the other side of the door is Room: {}\n'.format(other_room._roomNumber))
-        except KeyError:
-            print('No room:', room_number)
-    num_of_rooms = len(maze_rooms)
-    print('\nThere are {} rooms in the Maze.'.format(num_of_rooms))
-        
-    print('Both doors are the same object and they are on the East and West side of the two rooms.')
+    # create the original Maze, passing it in as a factory
+    factory = MazeFactory  # pass in class directly
+#    factory = MazeFactory  # or, pass in an instance of the class
+    print(factory)
+    maze_obj = MazeGame().CreateMaze(factory)
+    find_maze_rooms(maze_obj)
