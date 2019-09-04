@@ -143,3 +143,5 @@ if __name__ == '__main__':
     print('\nThere are {} rooms in the Maze.'.format(num_of_rooms))
         
     print('Both doors are the same object and they are on the East and West side of the two rooms.')
+    
+    # blah
