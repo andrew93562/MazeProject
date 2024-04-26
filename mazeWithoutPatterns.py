@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Aug 15 09:04:39 2019
-
-@author: socksandstilettos
-"""
 
 from enum import Enum
 
